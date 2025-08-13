@@ -20,16 +20,17 @@ public class LabelRound extends JLabel {
     private int roundBottomLeft = 0;
     private int roundBottomRight = 0;
 
-    // --- Colores de gradiente (opcionales) ---
+    // Gradient colors and orientation
     private Color color1 = null;
     private Color color2 = null;
     private Color color3 = null;
+    private boolean gradientHorizontal = false; // false = vertical, true = horizontal
 
     public LabelRound() {
         setOpaque(false);
     }
 
-    // ----------- Getters y setters normales ----------
+    // Getters and setters for rounded corners
     public int getRoundTopLeft() { return roundTopLeft; }
     public void setRoundTopLeft(int roundTopLeft) { this.roundTopLeft = roundTopLeft; repaint(); }
 
@@ -42,21 +43,41 @@ public class LabelRound extends JLabel {
     public int getRoundBottomRight() { return roundBottomRight; }
     public void setRoundBottomRight(int roundBottomRight) { this.roundBottomRight = roundBottomRight; repaint(); }
 
-    // ----------- Métodos nuevos para gradiente ----------
-    public void setGradientColors(Color c1, Color c2) {
+    // Gradient setters - vertical gradients
+    public void setGradientVerticalVertical(Color c1, Color c2) {
         this.color1 = c1;
         this.color2 = c2;
         this.color3 = null;
+        this.gradientHorizontal = false;
         repaint();
     }
 
-    public void setGradientColors(Color c1, Color c2, Color c3) {
+    public void setGradientVertical(Color c1, Color c2, Color c3) {
         this.color1 = c1;
         this.color2 = c2;
         this.color3 = c3;
+        this.gradientHorizontal = false;
         repaint();
     }
 
+    // Gradient setters - horizontal gradients
+    public void setGradientHorizontal(Color c1, Color c2) {
+        this.color1 = c1;
+        this.color2 = c2;
+        this.color3 = null;
+        this.gradientHorizontal = true;
+        repaint();
+    }
+
+    public void setGradientHorizontal(Color c1, Color c2, Color c3) {
+        this.color1 = c1;
+        this.color2 = c2;
+        this.color3 = c3;
+        this.gradientHorizontal = true;
+        repaint();
+    }
+
+    // Clear gradient (use solid background)
     public void clearGradient() {
         this.color1 = null;
         this.color2 = null;
@@ -69,27 +90,35 @@ public class LabelRound extends JLabel {
         Graphics2D g2 = (Graphics2D) g.create();
         g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
 
-        // Crear la forma redondeada combinando esquinas
+        // Create rounded shape
         Area area = new Area(createRoundTopLeft());
         if (roundTopRight > 0)  area.intersect(new Area(createRoundTopRight()));
         if (roundBottomLeft > 0)  area.intersect(new Area(createRoundBottomLeft()));
         if (roundBottomRight > 0) area.intersect(new Area(createRoundBottomRight()));
 
-        // Pintar fondo sólido o gradiente
+        // Paint gradient or solid background
         if (color1 != null && color2 != null) {
             Paint paint;
             if (color3 == null) {
-                // Gradiente de 2 colores
-                paint = new GradientPaint(0, 0, color1, 0, getHeight(), color2);
+                // 2-color gradient
+                if (gradientHorizontal) {
+                    paint = new GradientPaint(0, 0, color1, getWidth(), 0, color2);
+                } else {
+                    paint = new GradientPaint(0, 0, color1, 0, getHeight(), color2);
+                }
             } else {
-                // Gradiente de 3 colores
+                // 3-color gradient
                 float[] fractions = {0f, 0.5f, 1f};
                 Color[] colors = {color1, color2, color3};
-                paint = new LinearGradientPaint(0, 0, 0, getHeight(), fractions, colors);
+                if (gradientHorizontal) {
+                    paint = new LinearGradientPaint(0, 0, getWidth(), 0, fractions, colors);
+                } else {
+                    paint = new LinearGradientPaint(0, 0, 0, getHeight(), fractions, colors);
+                }
             }
             g2.setPaint(paint);
         } else {
-            g2.setColor(getBackground()); // comportamiento original
+            g2.setColor(getBackground());
         }
 
         g2.fill(area);
@@ -97,7 +126,7 @@ public class LabelRound extends JLabel {
         super.paintComponent(g);
     }
 
-    // ----------- Métodos privados para crear esquinas -----------
+    // Rounded corner shape methods (unchanged)
     private Shape createRoundTopLeft() {
         int width = getWidth();
         int height = getHeight();
